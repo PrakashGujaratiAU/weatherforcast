@@ -15,6 +15,14 @@ app.get('/weather/:city', (req, res)=>{
     {
         res.json({"temp":"36* C"});
     }
+    if(req.params.city=="surat")
+    {
+        res.json({"temp":"30* C"});
+    }
+    if(req.params.city=="baroda")
+    {
+        res.json({"temp":"35* C"});
+    }
 
     res.json({"temp":"NA"});
 });
