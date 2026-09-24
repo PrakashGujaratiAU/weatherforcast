@@ -23,6 +23,7 @@ app.get('/weather/:city', (req, res)=>{
     if(req.params.city=="baroda")
     {
         res.json({"temp":"35* C"});
+    }
     if(req.params.city=="junagadh")
     {
         res.json({"temp":"51* C"});
