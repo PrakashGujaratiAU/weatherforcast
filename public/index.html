@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Junagadh Weather Dashboard</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #eef4ff;
+            --card: rgba(255, 255, 255, 0.82);
+            --text: #172033;
+            --muted: #697386;
+            --primary: #2563eb;
+            --border: rgba(255, 255, 255, 0.8);
+            --shadow: 0 15px 40px rgba(30, 64, 175, 0.10);
+        }
+
+        body {
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at top left,
+                    #dbeafe,
+                    transparent 35%
+                ),
+                radial-gradient(
+                    circle at bottom right,
+                    #e0e7ff,
+                    transparent 35%
+                ),
+                var(--bg);
+
+            color: var(--text);
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .container {
+            width: min(1400px, 100%);
+            margin: auto;
+        }
+
+        /* ================= HEADER ================= */
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .brand h1 {
+            font-size: clamp(26px, 4vw, 42px);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+        }
+
+        .brand p {
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        .location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 11px 17px;
+            border-radius: 50px;
+            box-shadow: var(--shadow);
+            font-weight: 600;
+        }
+
+        /* ================= LOADING ================= */
+
+        .loading {
+            text-align: center;
+            padding: 100px 20px;
+            font-size: 20px;
+            color: var(--muted);
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid #dbeafe;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        /* ================= HERO ================= */
+
+        .hero {
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(37, 99, 235, 0.95),
+                    rgba(79, 70, 229, 0.92)
+                );
+
+            color: white;
+            border-radius: 30px;
+            padding: 35px;
+            box-shadow: 0 25px 60px rgba(37, 99, 235, 0.25);
+
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 30px;
+
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            right: -100px;
+            top: -120px;
+        }
+
+        .hero-left {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-city {
+            font-size: 18px;
+            opacity: 0.85;
+            margin-bottom: 12px;
+        }
+
+        .temperature {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .temperature img {
+            width: 100px;
+            height: 100px;
+        }
+
+        .temp-value {
+            font-size: clamp(60px, 8vw, 90px);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -5px;
+        }
+
+        .temp-unit {
+            font-size: 24px;
+            opacity: 0.8;
+            letter-spacing: 0;
+        }
+
+        .condition {
+            font-size: 23px;
+            text-transform: capitalize;
+            margin-top: 15px;
+        }
+
+        .feels {
+            margin-top: 8px;
+            opacity: 0.8;
+        }
+
+        .hero-right {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            align-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-stat {
+            background: rgba(255, 255, 255, 0.13);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            padding: 17px;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-stat .icon {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .hero-stat .label {
+            font-size: 12px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-stat .value {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* ================= SECTION ================= */
+
+        .section {
+            margin-top: 28px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 750;
+            margin-bottom: 15px;
+        }
+
+        /* ================= FORECAST ================= */
+
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .forecast-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            transition: 0.25s ease;
+        }
+
+        .forecast-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 45px rgba(30, 64, 175, 0.15);
+        }
+
+        .forecast-time {
+            font-weight: 750;
+            font-size: 16px;
+        }
+
+        .forecast-date {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .forecast-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+
+        .forecast-main img {
+            width: 75px;
+            height: 75px;
+        }
+
+        .forecast-temp {
+            font-size: 34px;
+            font-weight: 800;
+        }
+
+        .forecast-condition {
+            text-transform: capitalize;
+            color: var(--muted);
+            margin-bottom: 15px;
+        }
+
+        .forecast-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .mini-stat {
+            background: #f5f7fb;
+            padding: 11px;
+            border-radius: 12px;
+        }
+
+        .mini-label {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .mini-value {
+            font-weight: 700;
+            margin-top: 3px;
+        }
+
+        /* ================= DETAILS ================= */
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .detail-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .detail-icon {
+            font-size: 25px;
+            margin-bottom: 10px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .detail-value {
+            font-size: 18px;
+            font-weight: 750;
+            margin-top: 5px;
+        }
+
+        /* ================= CITY INFO ================= */
+
+        .city-info {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .city-card {
+            background: white;
+            padding: 18px;
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .city-card span {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .city-card strong {
+            font-size: 17px;
+        }
+
+        /* ================= SUMMARY ================= */
+
+        .summary {
+            margin-top: 28px;
+            background: white;
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .summary-text {
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* ================= FOOTER ================= */
+
+        footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            margin: 30px 0 10px;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media (max-width: 1000px) {
+
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .details-grid,
+            .city-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+
+            body {
+                padding: 15px;
+            }
+
+            .header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .hero {
+                padding: 25px;
+                border-radius: 22px;
+            }
+
+            .hero-right {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .forecast-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .details-grid,
+            .city-info {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .temp-value {
+                font-size: 62px;
+            }
+        }
+
+        @media (max-width: 450px) {
+
+            .details-grid,
+            .city-info {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-right {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .temperature img {
+                width: 75px;
+                height: 75px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <header class="header">
+
+        <div class="brand">
+            <h1>Weather Dashboard</h1>
+            <p>Live forecast & atmospheric conditions</p>
+        </div>
+
+        <div class="location">
+            📍 <span id="headerCity">Loading...</span>
+        </div>
+
+    </header>
+
+
+    <!-- LOADING -->
+    <div id="loading" class="loading">
+
+        <div class="spinner"></div>
+
+        <div>
+            Fetching weather information...
+        </div>
+
+    </div>
+
+
+    <!-- MAIN CONTENT -->
+    <main id="weatherContent" style="display:none;">
+
+        <!-- HERO -->
+        <section class="hero">
+
+            <div class="hero-left">
+
+                <div class="hero-city" id="heroCity">
+                    Junagadh, India
+                </div>
+
+                <div class="temperature">
+
+                    <img
+                        id="mainIcon"
+                        src=""
+                        alt="Weather"
+                    >
+
+                    <div>
+
+                        <div class="temp-value">
+                            <span id="mainTemp">--</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div
+                    class="condition"
+                    id="mainCondition">
+                    --
+                </div>
+
+                <div class="feels">
+                    Feels like <strong id="feelsLike">--</strong>°C
+                </div>
+
+            </div>
+
+
+            <div class="hero-right">
+
+                <div class="hero-stat">
+                    <div class="icon">💧</div>
+                    <div class="label">Humidity</div>
+                    <div class="value" id="humidity">--</div>
+                </div>
+
+                <div class="hero-stat">
+                    <div class="icon">💨</div>
+                    <div class="label">Wind</div>
+                    <div class="value" id="wind">--</div>
+                </div>
+
+                <div class="hero-stat">
+                    <div class="icon">🌧️</div>
+                    <div class="label">Rain Probability</div>
+                    <div class="value" id="rainProbability">--</div>
+                </div>
+
+                <div class="hero-stat">
+                    <div class="icon">☁️</div>
+                    <div class="label">Cloudiness</div>
+                    <div class="value" id="cloudiness">--</div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- FORECAST -->
+        <section class="section">
+
+            <h2 class="section-title">
+                🕒 Upcoming Forecast
+            </h2>
+
+            <div
+                class="forecast-grid"
+                id="forecastGrid">
+            </div>
+
+        </section>
+
+
+        <!-- WEATHER DETAILS -->
+        <section class="section">
+
+            <h2 class="section-title">
+                📊 Weather Details
+            </h2>
+
+            <div class="details-grid">
+
+                <div class="detail-card">
+                    <div class="detail-icon">🌡️</div>
+                    <div class="detail-label">Minimum Temperature</div>
+                    <div class="detail-value" id="tempMin">--</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-icon">🔥</div>
+                    <div class="detail-label">Maximum Temperature</div>
+                    <div class="detail-value" id="tempMax">--</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-icon">🎈</div>
+                    <div class="detail-label">Pressure</div>
+                    <div class="detail-value" id="pressure">--</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-icon">👁️</div>
+                    <div class="detail-label">Visibility</div>
+                    <div class="detail-value" id="visibility">--</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-icon">💨</div>
+                    <div class="detail-label">Wind Gust</div>
+                    <div class="detail-value" id="gust">--</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-icon">🧭</div>
+                    <div class="detail-label">Wind Direction</div>
+                    <div class="detail-value" id="windDirection">--</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-icon">🌧️</div>
+                    <div class="detail-label">Rain</div>
+                    <div class="detail-value" id="rain">--</div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-icon">❄️</div>
+                    <div class="detail-label">Snow</div>
+                    <div class="detail-value" id="snow">--</div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- CITY INFORMATION -->
+        <section class="section">
+
+            <h2 class="section-title">
+                🏙️ City Information
+            </h2>
+
+            <div class="city-info">
+
+                <div class="city-card">
+                    <span>City</span>
+                    <strong id="cityName">--</strong>
+                </div>
+
+                <div class="city-card">
+                    <span>Country</span>
+                    <strong id="country">--</strong>
+                </div>
+
+                <div class="city-card">
+                    <span>Population</span>
+                    <strong id="population">--</strong>
+                </div>
+
+                <div class="city-card">
+                    <span>Coordinates</span>
+                    <strong id="coordinates">--</strong>
+                </div>
+
+                <div class="city-card">
+                    <span>Timezone</span>
+                    <strong id="timezone">--</strong>
+                </div>
+
+                <div class="city-card">
+                    <span>Sunrise</span>
+                    <strong id="sunrise">--</strong>
+                </div>
+
+                <div class="city-card">
+                    <span>Sunset</span>
+                    <strong id="sunset">--</strong>
+                </div>
+
+                <div class="city-card">
+                    <span>Part of Day</span>
+                    <strong id="partOfDay">--</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- SUMMARY -->
+        <section class="summary">
+
+            <h2 class="section-title">
+                📝 Weather Summary
+            </h2>
+
+            <p
+                class="summary-text"
+                id="summary">
+            </p>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+        Weather Dashboard • Powered by Node.js Weather API
+    </footer>
+
+</div>
+
+
+<script>
+
+    /*
+     * ============================================================
+     * CONFIGURATION
+     * ============================================================
+     */
+
+    //const API_URL = "http://localhost:3000/weather/city/Junagadh";
+
+    const API_URL ="https://weatherforcast-lg6f.onrender.com/weather/city/Junagadh";
+
+
+    /*
+     * ============================================================
+     * DOM HELPERS
+     * ============================================================
+     */
+
+    const $ = id => document.getElementById(id);
+
+
+    /*
+     * ============================================================
+     * KELVIN → CELSIUS
+     * ============================================================
+     */
+
+    function kelvinToCelsius(kelvin) {
+
+        return (kelvin - 273.15).toFixed(1);
+
+    }
+
+
+    /*
+     * ============================================================
+     * FORMAT DATE
+     * ============================================================
+     */
+
+    function formatDate(dateString) {
+
+        const date = new Date(
+            dateString.replace(" ", "T")
+        );
+
+        return date.toLocaleDateString(
+            "en-IN",
+            {
+                weekday: "short",
+                day: "2-digit",
+                month: "short"
+            }
+        );
+
+    }
+
+
+    /*
+     * ============================================================
+     * FORMAT TIME
+     * ============================================================
+     */
+
+    function formatTime(dateString) {
+
+        const date = new Date(
+            dateString.replace(" ", "T")
+        );
+
+        return date.toLocaleTimeString(
+            "en-IN",
+            {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true
+            }
+        );
+
+    }
+
+
+    /*
+     * ============================================================
+     * FORMAT NUMBER
+     * ============================================================
+     */
+
+    function numberFormat(value) {
+
+        return new Intl.NumberFormat(
+            "en-IN"
+        ).format(value);
+
+    }
+
+
+    /*
+     * ============================================================
+     * FORMAT TIMEZONE
+     * ============================================================
+     */
+
+    function formatTimezone(seconds) {
+
+        const hours = seconds / 3600;
+
+        return `UTC${hours >= 0 ? "+" : ""}${hours}`;
+
+    }
+
+
+    /*
+     * ============================================================
+     * FETCH WEATHER
+     * ============================================================
+     */
+
+    async function loadWeather() {
+
+        try {
+
+            const response =
+                await fetch(API_URL);
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `HTTP Error: ${response.status}`
+                );
+
+            }
+
+            const result =
+                await response.json();
+
+            if (!result.success) {
+
+                throw new Error(
+                    "Weather API returned an unsuccessful response."
+                );
+
+            }
+
+            renderWeather(result);
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            $("loading").innerHTML = `
+                <div class="error">
+                    <strong>Unable to load weather data.</strong>
+                    <br><br>
+                    ${error.message}
+                    <br><br>
+                    Make sure your Node.js server is running on
+                    <strong>localhost:3000</strong>.
+                </div>
+            `;
+
+        }
+
+    }
+
+
+    /*
+     * ============================================================
+     * RENDER WEATHER
+     * ============================================================
+     */
+
+    function renderWeather(result) {
+
+        const data = result.data;
+
+        const city = data.city;
+
+        const forecasts = data.list;
+
+        if (!forecasts || forecasts.length === 0) {
+
+            throw new Error(
+                "No forecast data available."
+            );
+
+        }
+
+
+        /*
+         * --------------------------------------------------------
+         * CITY
+         * --------------------------------------------------------
+         */
+
+        $("headerCity").textContent =
+            `${city.name}, ${city.country}`;
+
+        $("heroCity").textContent =
+            `${city.name}, ${city.country}`;
+
+        $("cityName").textContent =
+            city.name;
+
+        $("country").textContent =
+            city.country;
+
+        $("population").textContent =
+            numberFormat(city.population);
+
+        $("coordinates").textContent =
+            `${city.coord.lat}°, ${city.coord.lon}°`;
+
+        $("timezone").textContent =
+            formatTimezone(city.timezone);
+
+        $("sunrise").textContent =
+            new Date(
+                city.sunrise * 1000
+            ).toLocaleTimeString(
+                "en-IN",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+        $("sunset").textContent =
+            new Date(
+                city.sunset * 1000
+            ).toLocaleTimeString(
+                "en-IN",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+
+        /*
+         * --------------------------------------------------------
+         * CURRENT / FIRST FORECAST
+         * --------------------------------------------------------
+         */
+
+        const current = forecasts[0];
+
+        const currentWeather =
+            current.weather[0];
+
+        const currentMain =
+            current.main;
+
+
+        $("mainTemp").textContent =
+            kelvinToCelsius(
+                currentMain.temprature
+            );
+
+        $("feelsLike").textContent =
+            kelvinToCelsius(
+                currentMain.temprature_feels_like
+            );
+
+        $("mainCondition").textContent =
+            currentWeather.description;
+
+        $("mainIcon").src =
+            currentWeather.icon;
+
+        $("mainIcon").alt =
+            currentWeather.description;
+
+
+        /*
+         * --------------------------------------------------------
+         * HERO STATS
+         * --------------------------------------------------------
+         */
+
+        $("humidity").textContent =
+            `${currentMain.humidity}%`;
+
+        $("wind").textContent =
+            `${current.wind.speed} m/s`;
+
+        $("rainProbability").textContent =
+            `${current.probability_of_precipitation}%`;
+
+        $("cloudiness").textContent =
+            `${current.clouds.cloudiness}%`;
+
+
+        /*
+         * --------------------------------------------------------
+         * DETAILS
+         * --------------------------------------------------------
+         */
+
+        $("tempMin").textContent =
+            `${kelvinToCelsius(currentMain.temprature_min)}°C`;
+
+        $("tempMax").textContent =
+            `${kelvinToCelsius(currentMain.temprature_max)}°C`;
+
+        $("pressure").textContent =
+            `${currentMain.pressure} hPa`;
+
+        $("visibility").textContent =
+            `${(current.visibility_distance / 1000).toFixed(1)} km`;
+
+        $("gust").textContent =
+            `${current.wind.gust_speed} m/s`;
+
+        $("windDirection").textContent =
+            `${current.wind.direction} (${current.wind.degrees}°)`;
+
+        $("rain").textContent =
+            `${current.rain.amount} mm`;
+
+        $("snow").textContent =
+            `${current.snow.amount} mm`;
+
+        $("partOfDay").textContent =
+            current.sys.part_of_day;
+
+
+        /*
+         * --------------------------------------------------------
+         * FORECAST CARDS
+         * --------------------------------------------------------
+         */
+
+        const forecastGrid =
+            $("forecastGrid");
+
+        forecastGrid.innerHTML = "";
+
+
+        forecasts.forEach(
+            (forecast, index) => {
+
+                const weather =
+                    forecast.weather[0];
+
+                const main =
+                    forecast.main;
+
+                const card =
+                    document.createElement("article");
+
+                card.className =
+                    "forecast-card";
+
+
+                card.innerHTML = `
+
+                    <div class="forecast-time">
+                        ${formatTime(forecast.dt_txt)}
+                    </div>
+
+                    <div class="forecast-date">
+                        ${formatDate(forecast.dt_txt)}
+                    </div>
+
+
+                    <div class="forecast-main">
+
+                        <img
+                            src="${weather.icon}"
+                            alt="${weather.description}"
+                        >
+
+                        <div class="forecast-temp">
+                            ${kelvinToCelsius(main.temprature)}°
+                        </div>
+
+                    </div>
+
+
+                    <div class="forecast-condition">
+                        ${weather.description}
+                    </div>
+
+
+                    <div class="forecast-details">
+
+                        <div class="mini-stat">
+
+                            <div class="mini-label">
+                                Feels Like
+                            </div>
+
+                            <div class="mini-value">
+                                ${kelvinToCelsius(
+                                    main.temprature_feels_like
+                                )}°C
+                            </div>
+
+                        </div>
+
+
+                        <div class="mini-stat">
+
+                            <div class="mini-label">
+                                Humidity
+                            </div>
+
+                            <div class="mini-value">
+                                ${main.humidity}%
+                            </div>
+
+                        </div>
+
+
+                        <div class="mini-stat">
+
+                            <div class="mini-label">
+                                Wind
+                            </div>
+
+                            <div class="mini-value">
+                                ${forecast.wind.speed} m/s
+                            </div>
+
+                        </div>
+
+
+                        <div class="mini-stat">
+
+                            <div class="mini-label">
+                                Rain Chance
+                            </div>
+
+                            <div class="mini-value">
+                                ${forecast.probability_of_precipitation}%
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+
+                forecastGrid.appendChild(card);
+
+            }
+        );
+
+
+        /*
+         * --------------------------------------------------------
+         * AUTOMATIC SUMMARY
+         * --------------------------------------------------------
+         */
+
+        const temperature =
+            kelvinToCelsius(
+                currentMain.temprature
+            );
+
+        const feels =
+            kelvinToCelsius(
+                currentMain.temprature_feels_like
+            );
+
+        $("summary").textContent =
+            `${city.name} is currently experiencing ${
+                currentWeather.description
+            } with a temperature of ${
+                temperature
+            }°C, feeling like ${
+                feels
+            }°C. Humidity is ${
+                currentMain.humidity
+            }%, visibility is ${
+                current.visibility_distance / 1000
+            } km and wind is blowing from the ${
+                current.wind.direction
+            } at ${
+                current.wind.speed
+            } m/s. The current probability of precipitation is ${
+                current.probability_of_precipitation
+            }%.`;
+
+
+        /*
+         * --------------------------------------------------------
+         * SHOW CONTENT
+         * --------------------------------------------------------
+         */
+
+        $("loading").style.display =
+            "none";
+
+        $("weatherContent").style.display =
+            "block";
+
+    }
+
+
+    /*
+     * ============================================================
+     * START APPLICATION
+     * ============================================================
+     */
+
+    loadWeather();
+
+</script>
+
+</body>
+</html>
