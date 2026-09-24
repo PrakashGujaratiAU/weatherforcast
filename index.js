@@ -6,6 +6,7 @@ app.get('/', (req, res)=>{
 });
 
 app.get('/weather/:city', (req, res)=>{
+    //sonigara tirth test........
     // res.send(req.params.city);
     if(req.params.city=="rajkot")
     {
