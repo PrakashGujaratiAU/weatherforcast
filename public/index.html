@@ -1,10 +1,11 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Junagadh Weather Dashboard</title>
+    <title>Weather Dashboard</title>
 
     <style>
         * {
@@ -15,11 +16,12 @@
 
         :root {
             --bg: #eef4ff;
-            --card: rgba(255, 255, 255, 0.82);
+            --card: rgba(255, 255, 255, 0.88);
             --text: #172033;
             --muted: #697386;
             --primary: #2563eb;
-            --border: rgba(255, 255, 255, 0.8);
+            --primary-dark: #1d4ed8;
+            --danger: #dc2626;
             --shadow: 0 15px 40px rgba(30, 64, 175, 0.10);
         }
 
@@ -76,8 +78,57 @@
             margin-top: 5px;
         }
 
-        .location {
+        /* ================= SEARCH ================= */
+
+        .search-box {
             display: flex;
+            gap: 10px;
+            background: white;
+            padding: 8px;
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .search-box input {
+            width: 250px;
+            border: none;
+            outline: none;
+            padding: 12px 15px;
+            font-size: 16px;
+            color: var(--text);
+            background: transparent;
+        }
+
+        .search-box input::placeholder {
+            color: #9ca3af;
+        }
+
+        .search-box button {
+            border: none;
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .search-box button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .search-box button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ================= LOCATION ================= */
+
+        .location {
+            display: inline-flex;
             align-items: center;
             gap: 8px;
             background: white;
@@ -257,7 +308,7 @@
 
         .forecast-card {
             background: var(--card);
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255, 255, 255, 0.8);
             border-radius: 22px;
             padding: 22px;
             box-shadow: var(--shadow);
@@ -336,7 +387,6 @@
 
         .detail-card {
             background: var(--card);
-            border: 1px solid var(--border);
             border-radius: 18px;
             padding: 18px;
             box-shadow: var(--shadow);
@@ -429,17 +479,21 @@
             }
 
             .header {
-                align-items: flex-start;
                 flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .search-box input {
+                width: 100%;
             }
 
             .hero {
                 padding: 25px;
                 border-radius: 22px;
-            }
-
-            .hero-right {
-                grid-template-columns: repeat(2, 1fr);
             }
 
             .forecast-grid {
@@ -449,10 +503,6 @@
             .details-grid,
             .city-info {
                 grid-template-columns: 1fr 1fr;
-            }
-
-            .temp-value {
-                font-size: 62px;
             }
         }
 
@@ -471,6 +521,10 @@
                 width: 75px;
                 height: 75px;
             }
+
+            .temp-value {
+                font-size: 60px;
+            }
         }
     </style>
 </head>
@@ -480,22 +534,64 @@
 <div class="container">
 
     <!-- HEADER -->
+
     <header class="header">
 
         <div class="brand">
-            <h1>Weather Dashboard</h1>
-            <p>Live forecast & atmospheric conditions</p>
+
+            <h1>🌤️ Weather Dashboard</h1>
+
+            <p>
+                Search weather information for any city
+            </p>
+
         </div>
 
-        <div class="location">
-            📍 <span id="headerCity">Loading...</span>
+
+        <!-- DYNAMIC CITY SEARCH -->
+
+        <div class="search-box">
+
+            <input
+                type="text"
+                id="cityInput"
+                placeholder="Enter city name..."
+                value="Junagadh"
+                autocomplete="off"
+            >
+
+            <button
+                id="searchButton"
+                onclick="searchWeather()"
+            >
+                🔍 Search
+            </button>
+
         </div>
 
     </header>
 
 
+    <!-- CURRENT LOCATION -->
+
+    <div
+        class="location"
+        style="margin-bottom: 25px;"
+    >
+        📍
+        <span id="headerCity">
+            Loading...
+        </span>
+    </div>
+
+
     <!-- LOADING -->
-    <div id="loading" class="loading">
+
+    <div
+        id="loading"
+        class="loading"
+        style="display:none;"
+    >
 
         <div class="spinner"></div>
 
@@ -506,17 +602,35 @@
     </div>
 
 
+    <!-- ERROR -->
+
+    <div
+        id="error"
+        class="error"
+        style="display:none;"
+    ></div>
+
+
     <!-- MAIN CONTENT -->
-    <main id="weatherContent" style="display:none;">
+
+    <main
+        id="weatherContent"
+        style="display:none;"
+    >
 
         <!-- HERO -->
+
         <section class="hero">
 
             <div class="hero-left">
 
-                <div class="hero-city" id="heroCity">
-                    Junagadh, India
+                <div
+                    class="hero-city"
+                    id="heroCity"
+                >
+                    --
                 </div>
+
 
                 <div class="temperature">
 
@@ -529,22 +643,40 @@
                     <div>
 
                         <div class="temp-value">
-                            <span id="mainTemp">--</span>
-                            <span class="temp-unit">°C</span>
+
+                            <span id="mainTemp">
+                                --
+                            </span>
+
+                            <span class="temp-unit">
+                                °C
+                            </span>
+
                         </div>
 
                     </div>
 
                 </div>
 
+
                 <div
                     class="condition"
-                    id="mainCondition">
+                    id="mainCondition"
+                >
                     --
                 </div>
 
+
                 <div class="feels">
-                    Feels like <strong id="feelsLike">--</strong>°C
+
+                    Feels like
+
+                    <strong id="feelsLike">
+                        --
+                    </strong>
+
+                    °C
+
                 </div>
 
             </div>
@@ -553,27 +685,74 @@
             <div class="hero-right">
 
                 <div class="hero-stat">
+
                     <div class="icon">💧</div>
-                    <div class="label">Humidity</div>
-                    <div class="value" id="humidity">--</div>
+
+                    <div class="label">
+                        Humidity
+                    </div>
+
+                    <div
+                        class="value"
+                        id="humidity"
+                    >
+                        --
+                    </div>
+
                 </div>
 
+
                 <div class="hero-stat">
+
                     <div class="icon">💨</div>
-                    <div class="label">Wind</div>
-                    <div class="value" id="wind">--</div>
+
+                    <div class="label">
+                        Wind
+                    </div>
+
+                    <div
+                        class="value"
+                        id="wind"
+                    >
+                        --
+                    </div>
+
                 </div>
 
+
                 <div class="hero-stat">
+
                     <div class="icon">🌧️</div>
-                    <div class="label">Rain Probability</div>
-                    <div class="value" id="rainProbability">--</div>
+
+                    <div class="label">
+                        Rain Probability
+                    </div>
+
+                    <div
+                        class="value"
+                        id="rainProbability"
+                    >
+                        --
+                    </div>
+
                 </div>
 
+
                 <div class="hero-stat">
+
                     <div class="icon">☁️</div>
-                    <div class="label">Cloudiness</div>
-                    <div class="value" id="cloudiness">--</div>
+
+                    <div class="label">
+                        Cloudiness
+                    </div>
+
+                    <div
+                        class="value"
+                        id="cloudiness"
+                    >
+                        --
+                    </div>
+
                 </div>
 
             </div>
@@ -582,6 +761,7 @@
 
 
         <!-- FORECAST -->
+
         <section class="section">
 
             <h2 class="section-title">
@@ -590,13 +770,14 @@
 
             <div
                 class="forecast-grid"
-                id="forecastGrid">
-            </div>
+                id="forecastGrid"
+            ></div>
 
         </section>
 
 
         <!-- WEATHER DETAILS -->
+
         <section class="section">
 
             <h2 class="section-title">
@@ -607,50 +788,113 @@
 
                 <div class="detail-card">
                     <div class="detail-icon">🌡️</div>
-                    <div class="detail-label">Minimum Temperature</div>
-                    <div class="detail-value" id="tempMin">--</div>
+                    <div class="detail-label">
+                        Minimum Temperature
+                    </div>
+                    <div
+                        class="detail-value"
+                        id="tempMin"
+                    >
+                        --
+                    </div>
                 </div>
+
 
                 <div class="detail-card">
                     <div class="detail-icon">🔥</div>
-                    <div class="detail-label">Maximum Temperature</div>
-                    <div class="detail-value" id="tempMax">--</div>
+                    <div class="detail-label">
+                        Maximum Temperature
+                    </div>
+                    <div
+                        class="detail-value"
+                        id="tempMax"
+                    >
+                        --
+                    </div>
                 </div>
+
 
                 <div class="detail-card">
                     <div class="detail-icon">🎈</div>
-                    <div class="detail-label">Pressure</div>
-                    <div class="detail-value" id="pressure">--</div>
+                    <div class="detail-label">
+                        Pressure
+                    </div>
+                    <div
+                        class="detail-value"
+                        id="pressure"
+                    >
+                        --
+                    </div>
                 </div>
+
 
                 <div class="detail-card">
                     <div class="detail-icon">👁️</div>
-                    <div class="detail-label">Visibility</div>
-                    <div class="detail-value" id="visibility">--</div>
+                    <div class="detail-label">
+                        Visibility
+                    </div>
+                    <div
+                        class="detail-value"
+                        id="visibility"
+                    >
+                        --
+                    </div>
                 </div>
+
 
                 <div class="detail-card">
                     <div class="detail-icon">💨</div>
-                    <div class="detail-label">Wind Gust</div>
-                    <div class="detail-value" id="gust">--</div>
+                    <div class="detail-label">
+                        Wind Gust
+                    </div>
+                    <div
+                        class="detail-value"
+                        id="gust"
+                    >
+                        --
+                    </div>
                 </div>
+
 
                 <div class="detail-card">
                     <div class="detail-icon">🧭</div>
-                    <div class="detail-label">Wind Direction</div>
-                    <div class="detail-value" id="windDirection">--</div>
+                    <div class="detail-label">
+                        Wind Direction
+                    </div>
+                    <div
+                        class="detail-value"
+                        id="windDirection"
+                    >
+                        --
+                    </div>
                 </div>
+
 
                 <div class="detail-card">
                     <div class="detail-icon">🌧️</div>
-                    <div class="detail-label">Rain</div>
-                    <div class="detail-value" id="rain">--</div>
+                    <div class="detail-label">
+                        Rain
+                    </div>
+                    <div
+                        class="detail-value"
+                        id="rain"
+                    >
+                        --
+                    </div>
                 </div>
+
 
                 <div class="detail-card">
                     <div class="detail-icon">❄️</div>
-                    <div class="detail-label">Snow</div>
-                    <div class="detail-value" id="snow">--</div>
+                    <div class="detail-label">
+                        Snow
+                    </div>
+                    <div
+                        class="detail-value"
+                        id="snow"
+                    >
+                        --
+                    </div>
                 </div>
 
             </div>
@@ -659,6 +903,7 @@
 
 
         <!-- CITY INFORMATION -->
+
         <section class="section">
 
             <h2 class="section-title">
@@ -713,6 +958,7 @@
 
 
         <!-- SUMMARY -->
+
         <section class="summary">
 
             <h2 class="section-title">
@@ -721,8 +967,8 @@
 
             <p
                 class="summary-text"
-                id="summary">
-            </p>
+                id="summary"
+            ></p>
 
         </section>
 
@@ -730,7 +976,7 @@
 
 
     <footer>
-        Weather Dashboard • Powered by Node.js Weather API
+        Weather Dashboard • Node.js + OpenWeather
     </footer>
 
 </div>
@@ -740,22 +986,57 @@
 
     /*
      * ============================================================
-     * CONFIGURATION
+     * API BASE URL
      * ============================================================
+     *
+     * City is added dynamically:
+     *
+     * https://weatherforcast-lg6f.onrender.com/weather/city/Junagadh
+     *
      */
 
-    //const API_URL = "http://localhost:3000/weather/city/Junagadh";
-
-    const API_URL ="https://weatherforcast-lg6f.onrender.com/weather/city/Junagadh";
+    const API_BASE_URL =
+        "https://weatherforcast-lg6f.onrender.com/weather/city";
 
 
     /*
      * ============================================================
-     * DOM HELPERS
+     * DOM HELPER
      * ============================================================
      */
 
-    const $ = id => document.getElementById(id);
+    const $ = id =>
+        document.getElementById(id);
+
+
+    /*
+     * ============================================================
+     * CITY INPUT
+     * ============================================================
+     */
+
+    const cityInput =
+        $("cityInput");
+
+
+    /*
+     * ============================================================
+     * ENTER KEY SUPPORT
+     * ============================================================
+     */
+
+    cityInput.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                searchWeather();
+
+            }
+
+        }
+    );
 
 
     /*
@@ -766,22 +1047,25 @@
 
     function kelvinToCelsius(kelvin) {
 
-        return (kelvin - 273.15).toFixed(1);
+        return (
+            kelvin - 273.15
+        ).toFixed(1);
 
     }
 
 
     /*
      * ============================================================
-     * FORMAT DATE
+     * DATE FORMAT
      * ============================================================
      */
 
     function formatDate(dateString) {
 
-        const date = new Date(
-            dateString.replace(" ", "T")
-        );
+        const date =
+            new Date(
+                dateString.replace(" ", "T")
+            );
 
         return date.toLocaleDateString(
             "en-IN",
@@ -797,15 +1081,16 @@
 
     /*
      * ============================================================
-     * FORMAT TIME
+     * TIME FORMAT
      * ============================================================
      */
 
     function formatTime(dateString) {
 
-        const date = new Date(
-            dateString.replace(" ", "T")
-        );
+        const date =
+            new Date(
+                dateString.replace(" ", "T")
+            );
 
         return date.toLocaleTimeString(
             "en-IN",
@@ -821,7 +1106,7 @@
 
     /*
      * ============================================================
-     * FORMAT NUMBER
+     * NUMBER FORMAT
      * ============================================================
      */
 
@@ -836,70 +1121,205 @@
 
     /*
      * ============================================================
-     * FORMAT TIMEZONE
+     * TIMEZONE FORMAT
      * ============================================================
      */
 
     function formatTimezone(seconds) {
 
-        const hours = seconds / 3600;
+        const hours =
+            seconds / 3600;
 
-        return `UTC${hours >= 0 ? "+" : ""}${hours}`;
+        return `UTC${
+            hours >= 0 ? "+" : ""
+        }${hours}`;
 
     }
 
 
     /*
      * ============================================================
-     * FETCH WEATHER
+     * SEARCH WEATHER
      * ============================================================
      */
 
-    async function loadWeather() {
+    async function searchWeather() {
+
+        /*
+         * Get city from input
+         */
+
+        const city =
+            cityInput.value.trim();
+
+
+        /*
+         * Validate city
+         */
+
+        if (!city) {
+
+            showError(
+                "Please enter a city name."
+            );
+
+            cityInput.focus();
+
+            return;
+
+        }
+
+
+        /*
+         * Encode city name.
+         *
+         * Example:
+         *
+         * Rajkot
+         * Ahmedabad
+         * New Delhi
+         * Mumbai
+         *
+         */
+
+        const encodedCity =
+            encodeURIComponent(city);
+
+
+        /*
+         * Dynamic API URL
+         *
+         * Example:
+         *
+         * https://weatherforcast-lg6f.onrender.com/weather/city/Rajkot
+         *
+         */
+
+        const apiURL =
+            `${API_BASE_URL}/${encodedCity}`;
+
+
+        console.log(
+            "Weather API:",
+            apiURL
+        );
+
+
+        /*
+         * UI state
+         */
+
+        $("weatherContent").style.display =
+            "none";
+
+        $("error").style.display =
+            "none";
+
+        $("loading").style.display =
+            "block";
+
+        $("searchButton").disabled =
+            true;
+
 
         try {
 
+            /*
+             * Call API
+             */
+
             const response =
-                await fetch(API_URL);
+                await fetch(apiURL);
+
+
+            /*
+             * HTTP error
+             */
 
             if (!response.ok) {
 
                 throw new Error(
-                    `HTTP Error: ${response.status}`
+                    `Server returned HTTP ${response.status}`
                 );
 
             }
+
+
+            /*
+             * Convert response to JSON
+             */
 
             const result =
                 await response.json();
 
+
+            console.log(
+                "Weather Response:",
+                result
+            );
+
+
+            /*
+             * API success check
+             */
+
             if (!result.success) {
 
                 throw new Error(
-                    "Weather API returned an unsuccessful response."
+                    "Weather data could not be found."
                 );
 
             }
+
+
+            /*
+             * Render data
+             */
 
             renderWeather(result);
 
         }
         catch (error) {
 
-            console.error(error);
+            console.error(
+                "Weather Error:",
+                error
+            );
 
-            $("loading").innerHTML = `
-                <div class="error">
-                    <strong>Unable to load weather data.</strong>
-                    <br><br>
-                    ${error.message}
-                    <br><br>
-                    Make sure your Node.js server is running on
-                    <strong>localhost:3000</strong>.
-                </div>
-            `;
+            showError(
+                `Unable to load weather for "${city}".<br><br>
+                 ${error.message}`
+            );
 
         }
+        finally {
+
+            $("loading").style.display =
+                "none";
+
+            $("searchButton").disabled =
+                false;
+
+        }
+
+    }
+
+
+    /*
+     * ============================================================
+     * ERROR MESSAGE
+     * ============================================================
+     */
+
+    function showError(message) {
+
+        $("error").innerHTML =
+            `<strong>Weather Search Error</strong>
+             <br><br>
+             ${message}`;
+
+        $("error").style.display =
+            "block";
 
     }
 
@@ -912,13 +1332,20 @@
 
     function renderWeather(result) {
 
-        const data = result.data;
+        const data =
+            result.data;
 
-        const city = data.city;
+        const city =
+            data.city;
 
-        const forecasts = data.list;
+        const forecasts =
+            data.list;
 
-        if (!forecasts || forecasts.length === 0) {
+
+        if (
+            !forecasts ||
+            forecasts.length === 0
+        ) {
 
             throw new Error(
                 "No forecast data available."
@@ -928,9 +1355,9 @@
 
 
         /*
-         * --------------------------------------------------------
+         * ========================================================
          * CITY
-         * --------------------------------------------------------
+         * ========================================================
          */
 
         $("headerCity").textContent =
@@ -946,13 +1373,24 @@
             city.country;
 
         $("population").textContent =
-            numberFormat(city.population);
+            numberFormat(
+                city.population
+            );
 
         $("coordinates").textContent =
             `${city.coord.lat}°, ${city.coord.lon}°`;
 
         $("timezone").textContent =
-            formatTimezone(city.timezone);
+            formatTimezone(
+                city.timezone
+            );
+
+
+        /*
+         * ========================================================
+         * SUNRISE
+         * ========================================================
+         */
 
         $("sunrise").textContent =
             new Date(
@@ -964,6 +1402,13 @@
                     minute: "2-digit"
                 }
             );
+
+
+        /*
+         * ========================================================
+         * SUNSET
+         * ========================================================
+         */
 
         $("sunset").textContent =
             new Date(
@@ -978,12 +1423,13 @@
 
 
         /*
-         * --------------------------------------------------------
-         * CURRENT / FIRST FORECAST
-         * --------------------------------------------------------
+         * ========================================================
+         * FIRST FORECAST
+         * ========================================================
          */
 
-        const current = forecasts[0];
+        const current =
+            forecasts[0];
 
         const currentWeather =
             current.weather[0];
@@ -992,18 +1438,37 @@
             current.main;
 
 
+        /*
+         * Temperature
+         */
+
         $("mainTemp").textContent =
             kelvinToCelsius(
                 currentMain.temprature
             );
+
+
+        /*
+         * Feels like
+         */
 
         $("feelsLike").textContent =
             kelvinToCelsius(
                 currentMain.temprature_feels_like
             );
 
+
+        /*
+         * Weather condition
+         */
+
         $("mainCondition").textContent =
             currentWeather.description;
+
+
+        /*
+         * Weather icon
+         */
 
         $("mainIcon").src =
             currentWeather.icon;
@@ -1013,9 +1478,9 @@
 
 
         /*
-         * --------------------------------------------------------
+         * ========================================================
          * HERO STATS
-         * --------------------------------------------------------
+         * ========================================================
          */
 
         $("humidity").textContent =
@@ -1032,43 +1497,58 @@
 
 
         /*
-         * --------------------------------------------------------
-         * DETAILS
-         * --------------------------------------------------------
+         * ========================================================
+         * WEATHER DETAILS
+         * ========================================================
          */
 
         $("tempMin").textContent =
-            `${kelvinToCelsius(currentMain.temprature_min)}°C`;
+            `${kelvinToCelsius(
+                currentMain.temprature_min
+            )}°C`;
+
 
         $("tempMax").textContent =
-            `${kelvinToCelsius(currentMain.temprature_max)}°C`;
+            `${kelvinToCelsius(
+                currentMain.temprature_max
+            )}°C`;
+
 
         $("pressure").textContent =
             `${currentMain.pressure} hPa`;
 
+
         $("visibility").textContent =
-            `${(current.visibility_distance / 1000).toFixed(1)} km`;
+            `${(
+                current.visibility_distance / 1000
+            ).toFixed(1)} km`;
+
 
         $("gust").textContent =
             `${current.wind.gust_speed} m/s`;
 
+
         $("windDirection").textContent =
-            `${current.wind.direction} (${current.wind.degrees}°)`;
+            `${current.wind.direction}
+             (${current.wind.degrees}°)`;
+
 
         $("rain").textContent =
             `${current.rain.amount} mm`;
 
+
         $("snow").textContent =
             `${current.snow.amount} mm`;
+
 
         $("partOfDay").textContent =
             current.sys.part_of_day;
 
 
         /*
-         * --------------------------------------------------------
+         * ========================================================
          * FORECAST CARDS
-         * --------------------------------------------------------
+         * ========================================================
          */
 
         const forecastGrid =
@@ -1078,7 +1558,7 @@
 
 
         forecasts.forEach(
-            (forecast, index) => {
+            forecast => {
 
                 const weather =
                     forecast.weather[0];
@@ -1086,8 +1566,12 @@
                 const main =
                     forecast.main;
 
+
                 const card =
-                    document.createElement("article");
+                    document.createElement(
+                        "article"
+                    );
+
 
                 card.className =
                     "forecast-card";
@@ -1096,13 +1580,16 @@
                 card.innerHTML = `
 
                     <div class="forecast-time">
-                        ${formatTime(forecast.dt_txt)}
+                        ${formatTime(
+                            forecast.dt_txt
+                        )}
                     </div>
 
                     <div class="forecast-date">
-                        ${formatDate(forecast.dt_txt)}
+                        ${formatDate(
+                            forecast.dt_txt
+                        )}
                     </div>
-
 
                     <div class="forecast-main">
 
@@ -1112,16 +1599,16 @@
                         >
 
                         <div class="forecast-temp">
-                            ${kelvinToCelsius(main.temprature)}°
+                            ${kelvinToCelsius(
+                                main.temprature
+                            )}°
                         </div>
 
                     </div>
 
-
                     <div class="forecast-condition">
                         ${weather.description}
                     </div>
-
 
                     <div class="forecast-details">
 
@@ -1139,7 +1626,6 @@
 
                         </div>
 
-
                         <div class="mini-stat">
 
                             <div class="mini-label">
@@ -1152,7 +1638,6 @@
 
                         </div>
 
-
                         <div class="mini-stat">
 
                             <div class="mini-label">
@@ -1164,7 +1649,6 @@
                             </div>
 
                         </div>
-
 
                         <div class="mini-stat">
 
@@ -1183,16 +1667,18 @@
                 `;
 
 
-                forecastGrid.appendChild(card);
+                forecastGrid.appendChild(
+                    card
+                );
 
             }
         );
 
 
         /*
-         * --------------------------------------------------------
-         * AUTOMATIC SUMMARY
-         * --------------------------------------------------------
+         * ========================================================
+         * WEATHER SUMMARY
+         * ========================================================
          */
 
         const temperature =
@@ -1205,6 +1691,7 @@
                 currentMain.temprature_feels_like
             );
 
+
         $("summary").textContent =
             `${city.name} is currently experiencing ${
                 currentWeather.description
@@ -1215,7 +1702,9 @@
             }°C. Humidity is ${
                 currentMain.humidity
             }%, visibility is ${
-                current.visibility_distance / 1000
+                (
+                    current.visibility_distance / 1000
+                ).toFixed(1)
             } km and wind is blowing from the ${
                 current.wind.direction
             } at ${
@@ -1226,13 +1715,10 @@
 
 
         /*
-         * --------------------------------------------------------
-         * SHOW CONTENT
-         * --------------------------------------------------------
+         * ========================================================
+         * SHOW WEATHER
+         * ========================================================
          */
-
-        $("loading").style.display =
-            "none";
 
         $("weatherContent").style.display =
             "block";
@@ -1242,13 +1728,17 @@
 
     /*
      * ============================================================
-     * START APPLICATION
+     * INITIAL WEATHER
      * ============================================================
+     *
+     * When page opens, Junagadh is loaded automatically.
+     *
      */
 
-    loadWeather();
+    searchWeather();
 
 </script>
 
 </body>
 </html>
+```
