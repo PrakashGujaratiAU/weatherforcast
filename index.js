@@ -16,6 +16,10 @@ app.get('/weather/:city', (req, res)=>{
     {
         res.json({"temp":"36* C"});
     }
+    if(req.params.city=="junagadh")
+    {
+        res.json({"temp":"51* C"});
+    }
 
     res.json({"temp":"NA"});
 });
